@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Traducteur EN · FR · AR</title>
+<style>
+:root{--bg:#f4f7f6;--card:#fff;--tx:#12201e;--mut:#5b6b68;--pri:#0f766e;--pri2:#14b8a6;--bd:#d7e2df;--acc:#f59e0b;--bad:#dc2626;--ok:#16a34a;--fs:17px}
+:root[data-theme=dark]{--bg:#0d1514;--card:#16211f;--tx:#e8f2f0;--mut:#93a7a3;--pri:#14b8a6;--pri2:#0f766e;--bd:#27403c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:var(--fs)/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--pri);color:#fff}
+header h1{font-size:1.05rem;margin:0}
+header button{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:10px;padding:6px 10px;margin-inline-start:6px;font-size:.95rem}
+main{padding:12px 12px 84px;max-width:720px;margin:auto}
+.tab{display:none}.tab.active{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:12px;margin-bottom:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row.sp{justify-content:space-between}
+select,button,textarea,input{font:inherit;color:inherit}
+select{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px;flex:1;min-width:0}
+textarea{width:100%;min-height:110px;resize:vertical;background:transparent;border:0;outline:0;font-size:1.05em;padding:4px}
+.btn{background:var(--pri);color:#fff;border:0;border-radius:12px;padding:10px 14px;font-weight:600}
+.btn.sec{background:transparent;color:var(--tx);border:1px solid var(--bd);font-weight:500}
+.btn.sm{padding:6px 10px;font-size:.9rem;border-radius:10px}
+.ic{background:transparent;border:1px solid var(--bd);border-radius:10px;padding:6px 10px;min-width:40px;font-size:1.05rem}
+.ic.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.swap{flex:0 0 auto;font-size:1.2rem}
+.res{min-height:54px;font-size:1.1em;white-space:pre-wrap;word-break:break-word}
+.mut{color:var(--mut);font-size:.88em}
+.chip{display:inline-block;background:var(--bg);border:1px solid var(--bd);border-radius:999px;padding:2px 10px;margin:2px;font-size:.88em}
+.phon{color:var(--pri);font-style:italic}
+mark{background:var(--acc);color:#111;border-radius:4px;padding:0 2px}
+.item{border-bottom:1px solid var(--bd);padding:10px 0}
+.item:last-child{border:0}
+.item .t{font-weight:600}
+nav{position:fixed;bottom:0;inset-inline:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom);z-index:6}
+nav button{flex:1;background:none;border:0;padding:8px 2px;font-size:.72rem;color:var(--mut)}
+nav button span{display:block;font-size:1.25rem}
+nav button.active{color:var(--pri);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--pri)}
+.toast{position:fixed;bottom:80px;inset-inline:16px;margin:auto;max-width:420px;background:#111;color:#fff;border-radius:12px;padding:10px 14px;text-align:center;z-index:20;opacity:0;transition:.25s;pointer-events:none}
+.toast.show{opacity:.95}
+.bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;width:0;background:var(--pri)}
+.flash{min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:1.4em;font-weight:600;padding:16px}
+[hidden]{display:none!important}
+h3{margin:.2em 0 .5em;font-size:1rem}
+</style>
+</head>
+<body>
+<header>
+  <h1 data-i="title"></h1>
+  <div><button id="btnTheme" aria-label="theme">🌓</button><button id="btnUi">عربي</button></div>
+</header>
+
+<main>
+<!-- ============ TRADUIRE ============ -->
+<section id="tab-tr" class="tab active">
+  <div class="card">
+    <div class="row">
+      <select id="src"></select>
+      <button class="ic swap" id="swap" aria-label="swap">⇄</button>
+      <select id="tgt"></select>
+    </div>
+  </div>
+
+  <div class="card">
+    <textarea id="inp" dir="auto" data-ph="ph_in"></textarea>
+    <div class="row sp">
+      <div class="row">
+        <button class="ic" id="mic" title="🎤">🎤</button>
+        <button class="ic" id="paste" title="Coller">📋</button>
+        <button class="ic" id="imp" title="Importer .txt">📂</button>
+        <button class="ic" id="clr" title="Effacer">✖</button>
+        <button class="ic" id="spkIn" title="Écouter">🔊</button>
+      </div>
+      <button class="btn" id="go" data-i="translate"></button>
+    </div>
+    <input type="file" id="file" accept=".txt,text/plain" hidden>
+  </div>
+
+  <div class="card" id="resCard" hidden>
+    <div class="res" id="res" dir="auto"></div>
+    <div class="mut" id="engine"></div>
+    <div class="row" style="margin-top:8px">
+      <button class="ic" id="spkOut">🔊</button>
+      <button class="ic" id="copy">📄</button>
+      <button class="ic" id="share">📤</button>
+      <button class="ic" id="fav">☆</button>
+      <button class="ic" id="addNb">📒</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row sp"><b data-i="speed"></b><span id="rateVal">1.0×</span></div>
+    <input type="range" id="rate" min="0.5" max="1.5" step="0.1" value="1">
+    <div class="row sp" style="margin-top:6px">
+      <label class="row"><input type="checkbox" id="loop"> <span data-i="loop"></span></label>
+      <button class="btn sec sm" id="stop" data-i="stop"></button>
+    </div>
+    <div id="reader" class="res" dir="auto" hidden style="margin-top:8px;border-top:1px solid var(--bd);padding-top:8px"></div>
+  </div>
+
+  <div class="card" id="dictCard" hidden>
+    <h3 data-i="dict"></h3>
+    <div id="dict"></div>
+  </div>
+</section>
+
+<!-- ============ HISTORIQUE ============ -->
+<section id="tab-hi" class="tab">
+  <div class="card">
+    <div class="row sp">
+      <div class="row"><button class="btn sm" id="hAll" data-i="all"></button><button class="btn sec sm" id="hFav" data-i="favs"></button></div>
+      <button class="btn sec sm" id="hClr" data-i="clear"></button>
+    </div>
+  </div>
+  <div class="card" id="hList"></div>
+</section>
+
+<!-- ============ CARNET ============ -->
+<section id="tab-nb" class="tab">
+  <div class="card row sp"><b data-i="nbTitle"></b><button class="btn sec sm" id="nbExp" data-i="export"></button></div>
+  <div class="card" id="nbList"></div>
+</section>
+
+<!-- ============ QUIZ ============ -->
+<section id="tab-qz" class="tab">
+  <div class="card">
+    <div class="mut" id="qzInfo"></div>
+    <div class="flash" id="qzCard" dir="auto"></div>
+    <div class="row sp" style="margin-top:8px">
+      <button class="ic" id="qzSpk">🔊</button>
+      <button class="btn" id="qzShow" data-i="show"></button>
+    </div>
+    <div class="row" id="qzAns" hidden style="margin-top:8px">
+      <button class="btn sec" id="qzBad" style="flex:1" data-i="again"></button>
+      <button class="btn" id="qzOk" style="flex:1" data-i="known"></button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RÉGLAGES ============ -->
+<section id="tab-st" class="tab">
+  <div class="card">
+    <h3 data-i="appearance"></h3>
+    <div class="row sp"><span data-i="theme"></span>
+      <select id="themeSel" style="max-width:55%"><option value="auto">Auto</option><option value="light">☀️</option><option value="dark">🌙</option></select></div>
+    <div class="row sp" style="margin-top:8px"><span data-i="font"></span><span id="fsVal"></span></div>
+    <input type="range" id="fs" min="14" max="26" step="1">
+  </div>
+
+  <div class="card">
+    <h3 data-i="engineT"></h3>
+    <select id="modeSel">
+      <option value="auto" data-i="m_auto"></option>
+      <option value="online" data-i="m_on"></option>
+      <option value="offline" data-i="m_off"></option>
+    </select>
+    <div class="mut" style="margin-top:6px" data-i="engineHelp"></div>
+  </div>
+
+  <div class="card">
+    <h3 data-i="offT"></h3>
+    <div class="mut" data-i="offHelp"></div>
+    <div id="models"></div>
+  </div>
+
+  <div class="card">
+    <h3 data-i="voicesT"></h3>
+    <div class="mut" data-i="voiceHelp"></div>
+    <div class="row sp" style="margin-top:6px"><span>English</span><select id="vEn" style="max-width:68%"></select></div>
+    <div class="row sp" style="margin-top:6px"><span>Français</span><select id="vFr" style="max-width:68%"></select></div>
+    <div class="row sp" style="margin-top:6px"><span>العربية</span><select id="vAr" style="max-width:68%"></select></div>
+    <button class="btn sec sm" id="vTest" style="margin-top:8px" data-i="vTest"></button>
+  </div>
+
+  <div class="card">
+    <button class="btn sec" id="wipe" data-i="wipe"></button>
+  </div>
+</section>
+</main>
+
+<nav>
+  <button data-tab="tr" class="active"><span>🔤</span><i data-i="n_tr" style="font-style:normal"></i></button>
+  <button data-tab="hi"><span>🕘</span><i data-i="n_hi" style="font-style:normal"></i></button>
+  <button data-tab="nb"><span>📒</span><i data-i="n_nb" style="font-style:normal"></i></button>
+  <button data-tab="qz"><span>🎯</span><i data-i="n_qz" style="font-style:normal"></i></button>
+  <button data-tab="st"><span>⚙️</span><i data-i="n_st" style="font-style:normal"></i></button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* ================= utilitaires ================= */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const LS = {
+  get(k, d){ try{ const v = JSON.parse(localStorage.getItem(k)); return v ?? d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const decodeEnt = s => { const t = document.createElement('textarea'); t.innerHTML = s; return t.value; };
+let toastTimer;
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.classList.remove('show'), 2600); }
+
+/* ================= i18n ================= */
+const T = {
+fr:{title:'Traducteur EN · FR · AR',translate:'Traduire',ph_in:'Saisissez un mot ou une phrase…',speed:'Vitesse de lecture',loop:'Lecture en boucle',stop:'Arrêter',
+ dict:'Dictionnaire (anglais)',all:'Tout',favs:'★ Favoris',clear:'Vider',nbTitle:'Carnet de vocabulaire',export:'Exporter .txt',show:'Afficher la réponse',again:'À revoir',known:'Je savais',
+ appearance:'Apparence',theme:'Thème',font:'Taille du texte',engineT:'Moteur de traduction',m_auto:'Automatique (en ligne si possible)',m_on:'Toujours en ligne',m_off:'Toujours hors ligne',
+ engineHelp:'En ligne : service MyMemory. Hors ligne : modèles installés sur le téléphone.',offT:'Traduction hors ligne',
+ offHelp:'Téléchargez les modèles une seule fois (connexion Wi-Fi conseillée). Chacun pèse plusieurs dizaines de Mo. Ensuite, ils fonctionnent sans internet.',
+ voicesT:'Voix de lecture',voiceHelp:'Choisissez l’accent (ex. en-GB britannique, en-US américain) et la voix.',vTest:'Tester la voix anglaise',wipe:'Effacer toutes les données de l’application',
+ n_tr:'Traduire',n_hi:'Historique',n_nb:'Carnet',n_qz:'Quiz',n_st:'Réglages',
+ auto:'Voix par défaut',installed:'Installé',notInst:'Non installé',dl:'Télécharger',dling:'Téléchargement…',
+ empty:'Rien ici pour le moment.',emptyQz:'Ajoutez des mots au carnet (📒) pour réviser.',noText:'Saisissez un texte.',copied:'Copié.',saved:'Ajouté au carnet.',
+ failOn:'Traduction en ligne impossible.',noModel:'Hors ligne : installez d’abord le modèle dans Réglages.',noTTS:'Synthèse vocale indisponible.',noSTT:'Dictée vocale indisponible sur ce navigateur.',
+ online:'en ligne',offline:'hors ligne',listening:'Parlez…',pairErr:'Échec du chargement du modèle.',confirmWipe:'Tout effacer ?',cards:'cartes',sure:'Maîtrise',
+ noDict:'Aucune définition trouvée.',def:'Sens',ex:'Exemple',syn:'Synonymes',wipeDone:'Données effacées.',cardOf:'Carte',
+ n:{en:'Anglais',fr:'Français',ar:'Arabe'}},
+ar:{title:'مترجم EN · FR · AR',translate:'ترجم',ph_in:'اكتب كلمة أو جملة…',speed:'سرعة النطق',loop:'تكرار القراءة',stop:'إيقاف',
+ dict:'القاموس (الإنجليزية)',all:'الكل',favs:'★ المفضلة',clear:'مسح',nbTitle:'دفتر المفردات',export:'تصدير .txt',show:'إظهار الجواب',again:'للمراجعة',known:'كنت أعرفها',
+ appearance:'المظهر',theme:'السمة',font:'حجم الخط',engineT:'محرك الترجمة',m_auto:'تلقائي (عبر الإنترنت إن أمكن)',m_on:'دائمًا عبر الإنترنت',m_off:'دائمًا دون اتصال',
+ engineHelp:'عبر الإنترنت: خدمة MyMemory. دون اتصال: نماذج مثبتة على الهاتف.',offT:'الترجمة دون اتصال',
+ offHelp:'نزّل النماذج مرة واحدة (يُفضّل شبكة Wi-Fi). حجم كل نموذج عدة عشرات من الميغابايت، ثم تعمل دون إنترنت.',
+ voicesT:'أصوات القراءة',voiceHelp:'اختر اللكنة (مثل en-GB بريطانية، en-US أمريكية) والصوت.',vTest:'تجربة الصوت الإنجليزي',wipe:'مسح جميع بيانات التطبيق',
+ n_tr:'ترجمة',n_hi:'السجل',n_nb:'الدفتر',n_qz:'اختبار',n_st:'الإعدادات',
+ auto:'الصوت الافتراضي',installed:'مثبّت',notInst:'غير مثبّت',dl:'تنزيل',dling:'جارٍ التنزيل…',
+ empty:'لا شيء هنا بعد.',emptyQz:'أضف كلمات إلى الدفتر (📒) للمراجعة.',noText:'اكتب نصًا.',copied:'تم النسخ.',saved:'أُضيفت إلى الدفتر.',
+ failOn:'تعذّرت الترجمة عبر الإنترنت.',noModel:'دون اتصال: ثبّت النموذج أولًا من الإعدادات.',noTTS:'النطق غير متاح.',noSTT:'الإملاء الصوتي غير متاح في هذا المتصفح.',
+ online:'عبر الإنترنت',offline:'دون اتصال',listening:'تحدّث…',pairErr:'فشل تحميل النموذج.',confirmWipe:'مسح كل شيء؟',cards:'بطاقات',sure:'الإتقان',
+ noDict:'لا توجد تعريفات.',def:'المعنى',ex:'مثال',syn:'مرادفات',wipeDone:'تم مسح البيانات.',cardOf:'بطاقة',
+ n:{en:'الإنجليزية',fr:'الفرنسية',ar:'العربية'}}
+};
+const LANGS = ['en','fr','ar'];
+const BCP = {en:'en-US', fr:'fr-FR', ar:'ar-SA'};
+const tr = k => (T[S.ui][k] ?? T.fr[k] ?? k);
+
+/* ================= état ================= */
+const S = Object.assign({ui:'fr',theme:'auto',font:17,mode:'auto',rate:1,src:'en',tgt:'fr',loop:false,voices:{en:'',fr:'',ar:''}}, LS.get('tr_state', {}));
+S.voices = Object.assign({en:'',fr:'',ar:''}, S.voices);
+const saveS = () => LS.set('tr_state', S);
+let history = LS.get('tr_hist', []);
+let notebook = LS.get('tr_nb', []);
+let installed = LS.get('tr_models', {});
+let current = null; // dernière traduction {src,tgt,text,res}
+
+function applyI18n(){
+  document.documentElement.lang = S.ui;
+  document.documentElement.dir = S.ui === 'ar' ? 'rtl' : 'ltr';
+  $$('[data-i]').forEach(e => e.textContent = tr(e.dataset.i));
+  $$('[data-ph]').forEach(e => e.placeholder = tr(e.dataset.ph));
+  $('#btnUi').textContent = S.ui === 'fr' ? 'عربي' : 'Français';
+  fillLangs(); renderHistory(); renderNotebook(); renderModels(); quizNext(true);
+}
+function applyTheme(){
+  const dark = S.theme === 'dark' || (S.theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  document.documentElement.style.setProperty('--fs', S.font + 'px');
+  $('#fsVal').textContent = S.font + ' px';
+}
+function fillLangs(){
+  for(const id of ['src','tgt']){
+    const sel = $('#'+id); sel.innerHTML = LANGS.map(l => `<option value="${l}">${tr('n')[l]}</option>`).join('');
+    sel.value = S[id];
+  }
+}
+
+/* ================= navigation ================= */
+$$('nav button').forEach(b => b.onclick = () => {
+  $$('nav button').forEach(x => x.classList.toggle('active', x === b));
+  $$('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-' + b.dataset.tab));
+  if(b.dataset.tab === 'qz') quizNext(true);
+  if(b.dataset.tab === 'st') fillVoices();
+  window.scrollTo(0, 0);
+});
+$('#btnUi').onclick = () => { S.ui = S.ui === 'fr' ? 'ar' : 'fr'; saveS(); applyI18n(); };
+$('#btnTheme').onclick = () => { S.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; $('#themeSel').value = S.theme; saveS(); applyTheme(); };
+$('#themeSel').onchange = e => { S.theme = e.target.value; saveS(); applyTheme(); };
+$('#fs').oninput = e => { S.font = +e.target.value; saveS(); applyTheme(); };
+$('#modeSel').onchange = e => { S.mode = e.target.value; saveS(); };
+
+/* ================= traduction en ligne ================= */
+function chunkText(text, max){
+  const parts = text.match(/[^.!?؟۔\n]+[.!?؟۔]*\s*/g) || [text];
+  const out = []; let cur = '';
+  for(const p of parts){
+    if((cur + p).length > max && cur){ out.push(cur.trim()); cur = ''; }
+    if(p.length > max){ for(let i = 0; i < p.length; i += max) out.push(p.slice(i, i + max).trim()); }
+    else cur += p;
+  }
+  if(cur.trim()) out.push(cur.trim());
+  return out.filter(Boolean);
+}
+async function onlineTr(text, src, tgt){
+  const res = [];
+  for(const c of chunkText(text, 450)){
+    const r = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(c) + '&langpair=' + src + '|' + tgt);
+    if(!r.ok) throw new Error('http ' + r.status);
+    const d = await r.json();
+    if(String(d.responseStatus) !== '200') throw new Error(d.responseDetails || 'api');
+    res.push(decodeEnt(d.responseData.translatedText));
+  }
+  return res.join(' ');
+}
+
+/* ================= traduction hors ligne (Transformers.js) ================= */
+const TF_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3';
+const PAIRS = {'en-fr':'Xenova/opus-mt-en-fr','fr-en':'Xenova/opus-mt-fr-en','en-ar':'Xenova/opus-mt-en-ar','ar-en':'Xenova/opus-mt-ar-en'};
+let tfLib = null; const pipes = {};
+async function getPipe(pair, onProg){
+  if(pipes[pair]) return pipes[pair];
+  if(!tfLib){ tfLib = await import(TF_URL); tfLib.env.allowLocalModels = false; }
+  const p = await tfLib.pipeline('translation', PAIRS[pair], {dtype:'q8', progress_callback:onProg});
+  pipes[pair] = p; installed[pair] = true; LS.set('tr_models', installed);
+  return p;
+}
+async function offlineStep(text, a, b){
+  const pair = a + '-' + b;
+  if(!installed[pair]) throw new Error('nomodel');
+  const p = await getPipe(pair);
+  const out = [];
+  for(const c of chunkText(text, 300)){
+    const input = (pair === 'en-ar') ? '>>ara<< ' + c : c;
+    const r = await p(input, {max_new_tokens: 400});
+    out.push(r[0].translation_text);
+  }
+  return out.join(' ');
+}
+async function offlineTr(text, src, tgt){
+  if(src === 'en' || tgt === 'en') return offlineStep(text, src, tgt);
+  const mid = await offlineStep(text, src, 'en');   // fr<->ar via l'anglais
+  return offlineStep(mid, 'en', tgt);
+}
+
+/* ================= traduction (choix du moteur) ================= */
+async function doTranslate(text, src, tgt){
+  if(src === tgt) return {res:text, eng:''};
+  const useOn = S.mode === 'online' || (S.mode === 'auto' && navigator.onLine);
+  if(useOn){
+    try{ return {res: await onlineTr(text, src, tgt), eng:'online'}; }
+    catch(e){ if(S.mode === 'online') throw new Error('failOn'); }
+  }
+  try{ return {res: await offlineTr(text, src, tgt), eng:'offline'}; }
+  catch(e){ throw new Error(e.message === 'nomodel' ? 'noModel' : (useOn ? 'failOn' : 'pairErr')); }
+}
+
+/* ================= écran Traduire ================= */
+$('#src').onchange = e => { S.src = e.target.value; if(S.src === S.tgt){ S.tgt = LANGS.find(l => l !== S.src); $('#tgt').value = S.tgt; } saveS(); };
+$('#tgt').onchange = e => { S.tgt = e.target.value; if(S.src === S.tgt){ S.src = LANGS.find(l => l !== S.tgt); $('#src').value = S.src; } saveS(); };
+$('#swap').onclick = () => {
+  [S.src, S.tgt] = [S.tgt, S.src]; fillLangs(); saveS();
+  if(current){ $('#inp').value = current.res; $('#resCard').hidden = true; }
+};
+$('#clr').onclick = () => { $('#inp').value = ''; $('#resCard').hidden = true; $('#dictCard').hidden = true; stopSpeech(); };
+$('#paste').onclick = async () => {
+  try{ $('#inp').value = await navigator.clipboard.readText(); }catch(e){ toast('📋 ?'); }
+};
+$('#imp').onclick = () => $('#file').click();
+$('#file').onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader(); r.onload = () => { $('#inp').value = String(r.result).slice(0, 20000); }; r.readAsText(f); e.target.value = '';
+};
+$('#inp').addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey && $('#inp').value.trim().split(/\s+/).length <= 3){ e.preventDefault(); $('#go').click(); } });
+
+$('#go').onclick = async () => {
+  const text = $('#inp').value.trim();
+  if(!text){ toast(tr('noText')); return; }
+  const btn = $('#go'); btn.disabled = true; btn.textContent = '…';
+  try{
+    const {res, eng} = await doTranslate(text, S.src, S.tgt);
+    current = {src:S.src, tgt:S.tgt, text, res};
+    $('#res').textContent = res;
+    $('#engine').textContent = eng ? '· ' + tr(eng) : '';
+    $('#resCard').hidden = false;
+    addHistory(current);
+    $('#fav').textContent = isFav(current) ? '★' : '☆';
+    showDictionary(current);
+  }catch(e){ toast(tr(e.message) || e.message); }
+  btn.disabled = false; btn.textContent = tr('translate');
+};
+$('#copy').onclick = async () => { if(!current) return; try{ await navigator.clipboard.writeText(current.res); toast(tr('copied')); }catch(e){} };
+$('#share').onclick = async () => {
+  if(!current) return;
+  const t = current.text + '\n→ ' + current.res;
+  if(navigator.share){ try{ await navigator.share({text:t}); }catch(e){} }
+  else { try{ await navigator.clipboard.writeText(t); toast(tr('copied')); }catch(e){} }
+};
+$('#fav').onclick = () => { if(!current) return; const h = history.find(x => sameEntry(x, current)); if(h){ h.fav = !h.fav; LS.set('tr_hist', history); $('#fav').textContent = h.fav ? '★' : '☆'; renderHistory(); } };
+$('#addNb').onclick = () => {
+  if(!current) return;
+  if(!notebook.some(x => sameEntry(x, current))){ notebook.unshift({id:Date.now(), src:current.src, tgt:current.tgt, text:current.text, res:current.res, score:0}); LS.set('tr_nb', notebook); renderNotebook(); }
+  toast(tr('saved'));
+};
+const sameEntry = (a, b) => a.src === b.src && a.tgt === b.tgt && a.text === b.text;
+const isFav = e => !!history.find(x => sameEntry(x, e) && x.fav);
+
+/* ================= historique ================= */
+let hFilter = 'all';
+function addHistory(e){
+  const old = history.find(x => sameEntry(x, e));
+  history = history.filter(x => !sameEntry(x, e));
+  history.unshift({id:Date.now(), src:e.src, tgt:e.tgt, text:e.text, res:e.res, fav: old ? old.fav : false});
+  history = history.slice(0, 300); LS.set('tr_hist', history); renderHistory();
+}
+function renderHistory(){
+  const list = history.filter(h => hFilter === 'all' || h.fav);
+  $('#hAll').className = 'btn sm' + (hFilter === 'all' ? '' : ' sec');
+  $('#hFav').className = 'btn sm' + (hFilter === 'fav' ? '' : ' sec');
+  $('#hList').innerHTML = list.length ? list.map(h => `
+    <div class="item" data-id="${h.id}">
+      <div class="mut">${tr('n')[h.src]} → ${tr('n')[h.tgt]}</div>
+      <div class="t" dir="auto">${esc(h.text)}</div>
+      <div dir="auto">${esc(h.res)}</div>
+      <div class="row" style="margin-top:6px">
+        <button class="ic" data-a="use">↩</button><button class="ic" data-a="spk">🔊</button>
+        <button class="ic" data-a="fav">${h.fav ? '★' : '☆'}</button><button class="ic" data-a="del">🗑</button>
+      </div></div>`).join('') : `<div class="mut">${tr('empty')}</div>`;
+}
+$('#hAll').onclick = () => { hFilter = 'all'; renderHistory(); };
+$('#hFav').onclick = () => { hFilter = 'fav'; renderHistory(); };
+$('#hClr').onclick = () => { history = history.filter(h => h.fav); LS.set('tr_hist', history); renderHistory(); };
+$('#hList').onclick = e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const h = history.find(x => x.id == b.closest('.item').dataset.id); if(!h) return;
+  if(b.dataset.a === 'del'){ history = history.filter(x => x !== h); }
+  else if(b.dataset.a === 'fav'){ h.fav = !h.fav; }
+  else if(b.dataset.a === 'spk'){ speak(h.res, h.tgt); }
+  else if(b.dataset.a === 'use'){
+    S.src = h.src; S.tgt = h.tgt; fillLangs(); $('#inp').value = h.text; current = {src:h.src, tgt:h.tgt, text:h.text, res:h.res};
+    $('#res').textContent = h.res; $('#resCard').hidden = false; $('#fav').textContent = h.fav ? '★' : '☆';
+    $$('nav button')[0].click(); showDictionary(current);
+  }
+  LS.set('tr_hist', history); renderHistory();
+};
+
+/* ================= carnet + quiz ================= */
+function renderNotebook(){
+  $('#nbList').innerHTML = notebook.length ? notebook.map(n => `
+    <div class="item" data-id="${n.id}">
+      <div class="t" dir="auto">${esc(n.text)}</div><div dir="auto">${esc(n.res)}</div>
+      <div class="mut">${tr('n')[n.src]} → ${tr('n')[n.tgt]} · ${tr('sure')} ${n.score}</div>
+      <div class="row" style="margin-top:6px"><button class="ic" data-a="s1">🔊</button><button class="ic" data-a="s2">🔊↔</button><button class="ic" data-a="del">🗑</button></div>
+    </div>`).join('') : `<div class="mut">${tr('empty')}</div>`;
+}
+$('#nbList').onclick = e => {
+  const b = e.target.closest('button'); if(!b) return;
+  const n = notebook.find(x => x.id == b.closest('.item').dataset.id); if(!n) return;
+  if(b.dataset.a === 'del'){ notebook = notebook.filter(x => x !== n); LS.set('tr_nb', notebook); renderNotebook(); }
+  else if(b.dataset.a === 's1') speak(n.text, n.src); else speak(n.res, n.tgt);
+};
+$('#nbExp').onclick = () => {
+  const txt = notebook.map(n => n.text + '\t' + n.res).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], {type:'text/plain;charset=utf-8'}));
+  a.download = 'carnet.txt'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+};
+let qCur = null;
+function quizNext(reset){
+  const card = $('#qzCard');
+  if(!notebook.length){ card.textContent = tr('emptyQz'); $('#qzInfo').textContent = ''; $('#qzShow').hidden = true; $('#qzAns').hidden = true; $('#qzSpk').hidden = true; qCur = null; return; }
+  $('#qzShow').hidden = false; $('#qzSpk').hidden = false; $('#qzAns').hidden = true;
+  // tirage pondéré : moins la maîtrise est élevée, plus la carte revient
+  const w = notebook.map(n => 1 / (1 + Math.max(0, n.score)));
+  let r = Math.random() * w.reduce((a, b) => a + b, 0), i = 0;
+  for(; i < w.length - 1; i++){ r -= w[i]; if(r <= 0) break; }
+  if(qCur && notebook.length > 1 && notebook[i] === qCur && !reset) i = (i + 1) % notebook.length;
+  qCur = notebook[i];
+  card.textContent = qCur.text;
+  $('#qzInfo').textContent = notebook.length + ' ' + tr('cards') + ' · ' + tr('n')[qCur.src] + ' → ' + tr('n')[qCur.tgt];
+}
+$('#qzShow').onclick = () => { if(!qCur) return; $('#qzCard').textContent = qCur.res; $('#qzShow').hidden = true; $('#qzAns').hidden = false; };
+$('#qzSpk').onclick = () => { if(qCur) speak($('#qzShow').hidden ? qCur.res : qCur.text, $('#qzShow').hidden ? qCur.tgt : qCur.src); };
+$('#qzOk').onclick = () => { if(qCur){ qCur.score++; LS.set('tr_nb', notebook); renderNotebook(); } quizNext(); };
+$('#qzBad').onclick = () => { if(qCur){ qCur.score = Math.max(0, qCur.score - 1); LS.set('tr_nb', notebook); renderNotebook(); } quizNext(); };
+
+/* ================= dictionnaire anglais + phonétique ================= */
+async function showDictionary(cur){
+  const card = $('#dictCard'); card.hidden = true;
+  const isWord = s => /^[A-Za-z][A-Za-z'’-]*$/.test(s.trim());
+  let word = null;
+  if(cur.src === 'en' && isWord(cur.text)) word = cur.text.trim();
+  else if(cur.tgt === 'en' && isWord(cur.res)) word = cur.res.trim();
+  if(!word || !navigator.onLine) return;
+  try{
+    const r = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word.toLowerCase()));
+    if(!r.ok) return;
+    const d = await r.json(); const e = d[0]; if(!e) return;
+    const phon = e.phonetic || (e.phonetics.find(p => p.text) || {}).text || '';
+    let h = `<div class="row sp"><b dir="ltr">${esc(e.word)}</b><span class="phon" dir="ltr">${esc(phon)}</span><button class="ic" id="dSpk">🔊</button></div>`;
+    for(const m of e.meanings.slice(0, 4)){
+      h += `<div style="margin-top:8px"><i class="mut">${esc(m.partOfSpeech)}</i>`;
+      for(const df of m.definitions.slice(0, 2)){
+        h += `<div dir="ltr" style="margin:2px 0">• ${esc(df.definition)}</div>`;
+        if(df.example) h += `<div class="mut" dir="ltr">${tr('ex')} : « ${esc(df.example)} »</div>`;
+      }
+      const syn = (m.synonyms || []).slice(0, 6);
+      if(syn.length) h += `<div dir="ltr">${syn.map(s => `<span class="chip">${esc(s)}</span>`).join('')}</div>`;
+      h += '</div>';
+    }
+    $('#dict').innerHTML = h; card.hidden = false;
+    $('#dSpk').onclick = () => speak(e.word, 'en');
+  }catch(err){ /* silencieux hors ligne */ }
+}
+
+/* ================= synthèse vocale ================= */
+let voices = [], speakId = 0, curIdx = 0, curJob = null;
+function loadVoices(){ voices = ('speechSynthesis' in window) ? speechSynthesis.getVoices() : []; fillVoices(); }
+if('speechSynthesis' in window){ speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); }
+function fillVoices(){
+  for(const [l, id] of [['en','vEn'],['fr','vFr'],['ar','vAr']]){
+    const sel = $('#'+id); if(!sel) continue;
+    const list = voices.filter(v => v.lang.toLowerCase().startsWith(l));
+    sel.innerHTML = `<option value="">${tr('auto')}</option>` + list.map(v => `<option value="${esc(v.voiceURI)}">${esc(v.name)} (${esc(v.lang)})</option>`).join('');
+    sel.value = S.voices[l] || '';
+    sel.onchange = () => { S.voices[l] = sel.value; saveS(); };
+  }
+}
+function pickVoice(l){
+  if(S.voices[l]){ const v = voices.find(v => v.voiceURI === S.voices[l]); if(v) return v; }
+  return voices.find(v => v.lang.toLowerCase().startsWith(l)) || null;
+}
+function splitForSpeech(text){
+  const out = []; const re = /[^.!?؟۔\n]+[.!?؟۔]*\s*/g; let m, cur = null;
+  while((m = re.exec(text))){
+    if(cur && (cur.t.length + m[0].length) <= 180){ cur.t += m[0]; }
+    else { cur = {t:m[0], off:m.index}; out.push(cur); }
+  }
+  return out.length ? out : [{t:text, off:0}];
+}
+function renderReader(text, start, len){
+  const box = $('#reader');
+  if(start < 0){ box.textContent = text; return; }
+  const end = start + (len > 0 ? len : (text.slice(start).search(/[\s.,;:!?]/) + 1 || text.length - start));
+  box.innerHTML = esc(text.slice(0, start)) + '<mark>' + esc(text.slice(start, end)) + '</mark>' + esc(text.slice(end));
+}
+function speak(text, lang, from){
+  if(!('speechSynthesis' in window)){ toast(tr('noTTS')); return; }
+  text = (text || '').trim(); if(!text) return;
+  speechSynthesis.cancel();
+  const id = ++speakId; const chunks = splitForSpeech(text);
+  curJob = {text, lang}; curIdx = from || 0;
+  $('#reader').hidden = false; renderReader(text, -1, 0);
+  const next = () => {
+    if(id !== speakId) return;
+    if(curIdx >= chunks.length){ if($('#loop').checked){ curIdx = 0; } else { $('#reader').hidden = true; curJob = null; return; } }
+    const c = chunks[curIdx];
+    const u = new SpeechSynthesisUtterance(c.t);
+    u.lang = BCP[lang]; u.rate = S.rate;
+    const v = pickVoice(lang); if(v){ u.voice = v; u.lang = v.lang; }
+    u.onboundary = ev => { if(id === speakId && (!ev.name || ev.name === 'word')) renderReader(text, c.off + ev.charIndex, ev.charLength || 0); };
+    u.onend = () => { if(id === speakId){ curIdx++; next(); } };
+    u.onerror = ev => { if(id === speakId && ev.error !== 'interrupted' && ev.error !== 'canceled'){ toast(tr('noTTS')); curJob = null; } };
+    speechSynthesis.speak(u);
+  };
+  next();
+}
+function stopSpeech(){ speakId++; curJob = null; if('speechSynthesis' in window) speechSynthesis.cancel(); $('#reader').hidden = true; }
+$('#stop').onclick = stopSpeech;
+$('#spkIn').onclick = () => speak($('#inp').value, S.src);
+$('#spkOut').onclick = () => { if(current) speak(current.res, current.tgt); };
+$('#rate').oninput = e => {
+  S.rate = +e.target.value; $('#rateVal').textContent = S.rate.toFixed(1) + '×'; saveS();
+  if(curJob){ const j = curJob, i = curIdx; speak(j.text, j.lang, i); }   // applique la nouvelle vitesse sans repartir du début
+};
+$('#loop').onchange = e => { S.loop = e.target.checked; saveS(); };
+$('#vTest').onclick = () => speak('Hello! This is a test of the English voice.', 'en');
+
+/* ================= dictée vocale ================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, recOn = false;
+$('#mic').onclick = () => {
+  if(!SR){ toast(tr('noSTT')); return; }
+  if(recOn){ rec.stop(); return; }
+  rec = new SR(); rec.lang = BCP[S.src]; rec.interimResults = true; rec.continuous = true;
+  const base = $('#inp').value ? $('#inp').value.trimEnd() + ' ' : '';
+  let finalTxt = '';
+  rec.onresult = ev => {
+    let interim = '';
+    for(let i = ev.resultIndex; i < ev.results.length; i++){
+      const t = ev.results[i][0].transcript;
+      if(ev.results[i].isFinal) finalTxt += t + ' '; else interim += t;
+    }
+    $('#inp').value = base + finalTxt + interim;
+  };
+  rec.onend = () => { recOn = false; $('#mic').classList.remove('on'); };
+  rec.onerror = ev => { recOn = false; $('#mic').classList.remove('on'); if(ev.error === 'not-allowed') toast('🎤 ✖'); };
+  try{ rec.start(); recOn = true; $('#mic').classList.add('on'); toast(tr('listening')); }catch(e){}
+};
+
+/* ================= modèles hors ligne ================= */
+function renderModels(){
+  $('#models').innerHTML = Object.keys(PAIRS).map(p => {
+    const [a, b] = p.split('-');
+    return `<div class="item"><div class="row sp"><b>${tr('n')[a]} → ${tr('n')[b]}</b>
+      <span class="mut">${installed[p] ? '✓ ' + tr('installed') : tr('notInst')}</span></div>
+      <div class="row sp" style="margin-top:6px"><button class="btn sm ${installed[p] ? 'sec' : ''}" data-p="${p}" ${installed[p] ? 'hidden' : ''}>${tr('dl')}</button></div>
+      <div class="bar" id="bar-${p}" hidden><i></i></div></div>`;
+  }).join('');
+}
+$('#models').onclick = async e => {
+  const b = e.target.closest('button[data-p]'); if(!b) return;
+  const p = b.dataset.p; b.disabled = true; b.textContent = tr('dling');
+  const bar = $('#bar-' + p); bar.hidden = false; const fill = bar.firstElementChild; const files = {};
+  try{
+    await getPipe(p, d => {
+      if(d.status === 'progress' && d.total){ files[d.file] = d.loaded / d.total; const v = Object.values(files); fill.style.width = (100 * v.reduce((x, y) => x + y, 0) / Math.max(v.length, 1)) + '%'; }
+    });
+    toast('✓ ' + tr('installed'));
+  }catch(err){ toast(tr('pairErr')); }
+  renderModels();
+};
+$('#wipe').onclick = async () => {
+  if(!confirm(tr('confirmWipe'))) return;
+  ['tr_state','tr_hist','tr_nb','tr_models'].forEach(k => localStorage.removeItem(k));
+  try{ for(const k of await caches.keys()) if(k.startsWith('transformers')) await caches.delete(k); }catch(e){}
+  history = []; notebook = []; installed = {}; toast(tr('wipeDone')); setTimeout(() => location.reload(), 800);
+};
+
+/* ================= init ================= */
+$('#rate').value = S.rate; $('#rateVal').textContent = (+S.rate).toFixed(1) + '×';
+$('#loop').checked = S.loop; $('#themeSel').value = S.theme; $('#modeSel').value = S.mode; $('#fs').value = S.font;
+applyTheme(); applyI18n();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
